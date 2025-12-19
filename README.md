@@ -38,30 +38,36 @@ Build a web platform powered by AI that:
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/syrinesmati/Tunisan-Real-Estate-Price-Prediction-Platform.git
 cd ML-project
 ```
 
 ### 2. Environment Setup
 
-**Backend:**
+**Create .env files** (you can skip this for Docker setup, but needed for manual development):
+
+**Backend (.env not required for Docker, but for manual setup):**
 ```bash
 cd back
-cp .env.example .env
-# Edit .env with your configurations
+# Create .env if needed for manual development
 ```
 
-**Frontend:**
+**Frontend (.env not required for Docker, but for manual setup):**
 ```bash
 cd front
-cp .env.example .env
-# Set VITE_API_URL=http://localhost:8000
+# Create .env and set: VITE_API_URL=http://localhost:8000
 ```
 
-**ML Pipeline:**
+**ML Pipeline (create virtual environment):**
 ```bash
 cd ML
-cp .env.example .env
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
+pip install -r requirements.txt
 ```
 
 ### 3. Run with Docker Compose
@@ -79,11 +85,17 @@ This will start:
 
 ### 4. Manual Setup (Development)
 
+**Important**: Always use virtual environments to avoid dependency conflicts!
+
 **Backend:**
 ```bash
 cd back
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
+source venv/bin/activate
+
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
@@ -99,10 +111,19 @@ npm run dev
 ```bash
 cd ML
 python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Linux/Mac:
 source venv/bin/activate
+
 pip install -r requirements.txt
 python train.py
 ```
+
+> **Note for Windows users**: If you get an execution policy error when activating venv, run:
+> ```powershell
+> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+> ```
 
 ## 📊 Data Setup
 
@@ -328,10 +349,48 @@ npm test
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+### First Time Contributors
+
+1. **Fork and Clone**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/Tunisan-Real-Estate-Price-Prediction-Platform.git
+   cd ML-project
+   ```
+
+2. **Choose Your Setup Method**
+   - **Easy (Docker)**: Just run `docker-compose up -d`
+   - **Development (Manual)**: Follow "Manual Setup" above
+
+3. **Create Virtual Environments**
+   ```bash
+   # For ML work
+   cd ML
+   python -m venv venv
+   venv\Scripts\activate  # Windows
+   pip install -r requirements.txt
+   
+   # For Backend work
+   cd ../back
+   python -m venv venv
+   venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+4. **Make Changes**
+   - Create a feature branch: `git checkout -b feature/your-feature-name`
+   - Make your changes
+   - Test thoroughly
+
+5. **Submit Pull Request**
+   - Commit: `git commit -m "Add: your feature description"`
+   - Push: `git push origin feature/your-feature-name`
+   - Open a PR on GitHub
+
+### Development Tips
+- Always activate virtual environment before running Python code
+- Run MLflow UI to monitor experiments: `mlflow ui` (from ML/ directory)
+- Check API docs at http://localhost:8000/docs when backend is running
+- Frontend hot-reloads automatically during development
 
 ## 📄 License
 
