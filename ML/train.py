@@ -27,9 +27,23 @@ RANDOM_STATE = 42
 # Data paths
 BASE_DIR = Path(__file__).resolve().parent
 DATA_VERSION = os.getenv("DATA_VERSION", "v2")
-DATA_DIR = BASE_DIR / "data" / f"prepared_{DATA_VERSION}"
-if not DATA_DIR.exists():
-    DATA_DIR = BASE_DIR / "data" / "prepared"
+DATA_MODE = os.getenv("DATA_MODE", "auto").lower()
+
+# Try to find combined data first (simpler preprocessing)
+combined_data_dir = BASE_DIR / "data" / "combined"
+prepared_v3_dir = BASE_DIR / "data" / f"prepared_{DATA_VERSION}"
+prepared_v2_dir = BASE_DIR / "data" / "prepared"
+
+if combined_data_dir.exists():
+    DATA_DIR = BASE_DIR / "data"
+    DATA_MODE = "combined"
+elif prepared_v3_dir.exists():
+    DATA_DIR = prepared_v3_dir
+elif prepared_v2_dir.exists():
+    DATA_DIR = prepared_v2_dir
+else:
+    DATA_DIR = BASE_DIR / "data" / f"prepared_{DATA_VERSION}"
+
 MODELS_DIR = BASE_DIR / "models"
 
 
@@ -40,30 +54,53 @@ def calculate_mape(y_true, y_pred):
     return mape
 
 
-def load_preprocessed_data(transaction_type):
+def detect_dataset_mode(data_dir: Path) -> str:
+    combined_dir = data_dir / "combined"
+    rent_dir = data_dir / "rent"
+    sale_dir = data_dir / "sale"
+
+    if combined_dir.exists():
+        return "combined"
+    if rent_dir.exists() and sale_dir.exists():
+        return "split"
+    if (data_dir / "X_train.npy").exists():
+        return "combined"
+    return "unknown"
+
+
+def load_preprocessed_data(transaction_type=None):
     """
-    Load preprocessed data for rent or sale
+    Load preprocessed data for rent/sale or combined dataset.
     
     Args:
-        transaction_type: 'rent' or 'sale'
+        transaction_type: 'rent', 'sale', or None/'combined'
     
     Returns:
         X_train, X_test, y_train, y_test
     """
-    print(f"\n📂 Loading {transaction_type.upper()} data...")
-    
-    data_path = Path(DATA_DIR) / transaction_type
-    
+    mode = DATA_MODE
+    if mode == "auto":
+        mode = detect_dataset_mode(DATA_DIR)
+
+    if mode == "combined" or transaction_type in (None, "combined"):
+        label = "COMBINED"
+        data_path = Path(DATA_DIR) / "combined" if (Path(DATA_DIR) / "combined").exists() else Path(DATA_DIR)
+    else:
+        label = transaction_type.upper()
+        data_path = Path(DATA_DIR) / transaction_type
+
+    print(f"\n📂 Loading {label} data...")
+
     X_train = np.load(data_path / "X_train.npy")
     X_test = np.load(data_path / "X_test.npy")
     y_train = np.load(data_path / "y_train.npy")
     y_test = np.load(data_path / "y_test.npy")
-    
-    print(f"✅ Loaded {transaction_type.upper()} data:")
+
+    print(f"✅ Loaded {label} data:")
     print(f"   Train: {X_train.shape[0]:,} samples × {X_train.shape[1]} features")
     print(f"   Test:  {X_test.shape[0]:,} samples × {X_test.shape[1]} features")
     print(f"   Price range: {y_train.min():.0f} - {y_train.max():.0f} TND")
-    
+
     return X_train, X_test, y_train, y_test
 
 
@@ -313,25 +350,40 @@ def main():
     experiment = mlflow.get_experiment_by_name(experiment_name)
     print(f"📁 Experiment ID: {experiment.experiment_id}")
     
-    # Run experiments for both transaction types
+    # Run experiments based on dataset mode
     all_results = {}
-    
-    # RENT experiment
-    rent_results, rent_models = run_experiment('rent', experiment_name)
-    all_results['rent'] = rent_results
-    
-    # SALE experiment
-    sale_results, sale_models = run_experiment('sale', experiment_name)
-    all_results['sale'] = sale_results
-    
-    # Final summary
-    print(f"\n{'='*80}")
-    print("✅ ALL EXPERIMENTS COMPLETED!")
-    print(f"{'='*80}")
-    
-    print(f"\n🏆 BEST MODELS:")
-    print(f"   RENT: {rent_results.iloc[0]['model']} (R² = {rent_results.iloc[0]['test_r2']:.4f})")
-    print(f"   SALE: {sale_results.iloc[0]['model']} (R² = {sale_results.iloc[0]['test_r2']:.4f})")
+    dataset_mode = DATA_MODE
+    if dataset_mode == "auto":
+        dataset_mode = detect_dataset_mode(DATA_DIR)
+
+    if dataset_mode == "combined":
+        combined_results, combined_models = run_experiment('combined', experiment_name)
+        all_results['combined'] = combined_results
+
+        # Final summary
+        print(f"\n{'='*80}")
+        print("✅ EXPERIMENT COMPLETED!")
+        print(f"{'='*80}")
+
+        print(f"\n🏆 BEST MODEL:")
+        print(f"   COMBINED: {combined_results.iloc[0]['model']} (R² = {combined_results.iloc[0]['test_r2']:.4f})")
+    else:
+        # RENT experiment
+        rent_results, rent_models = run_experiment('rent', experiment_name)
+        all_results['rent'] = rent_results
+
+        # SALE experiment
+        sale_results, sale_models = run_experiment('sale', experiment_name)
+        all_results['sale'] = sale_results
+
+        # Final summary
+        print(f"\n{'='*80}")
+        print("✅ ALL EXPERIMENTS COMPLETED!")
+        print(f"{'='*80}")
+
+        print(f"\n🏆 BEST MODELS:")
+        print(f"   RENT: {rent_results.iloc[0]['model']} (R² = {rent_results.iloc[0]['test_r2']:.4f})")
+        print(f"   SALE: {sale_results.iloc[0]['model']} (R² = {sale_results.iloc[0]['test_r2']:.4f})")
     
     print(f"\n📊 View results in MLflow UI:")
     print(f"   {MLFLOW_TRACKING_URI}")
@@ -342,12 +394,17 @@ def main():
     output_dir = BASE_DIR / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    rent_results.to_csv(output_dir / "mlflow_rent_results.csv", index=False)
-    sale_results.to_csv(output_dir / "mlflow_sale_results.csv", index=False)
-    
-    print(f"\n💾 Results saved to:")
-    print(f"   {output_dir / 'mlflow_rent_results.csv'}")
-    print(f"   {output_dir / 'mlflow_sale_results.csv'}")
+    if dataset_mode == "combined":
+        combined_results.to_csv(output_dir / "mlflow_combined_results.csv", index=False)
+        print(f"\n💾 Results saved to:")
+        print(f"   {output_dir / 'mlflow_combined_results.csv'}")
+    else:
+        rent_results.to_csv(output_dir / "mlflow_rent_results.csv", index=False)
+        sale_results.to_csv(output_dir / "mlflow_sale_results.csv", index=False)
+        
+        print(f"\n💾 Results saved to:")
+        print(f"   {output_dir / 'mlflow_rent_results.csv'}")
+        print(f"   {output_dir / 'mlflow_sale_results.csv'}")
     
     print(f"\n{'='*80}\n")
     
