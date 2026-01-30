@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # Model Paths
     RENT_MODEL_PATH: str = "./models/rent_model"
     SALE_MODEL_PATH: str = "./models/sale_model"
+    ML_DIR: str = "../ML"  # Path to ML directory for combined model
     
     # Scraping
     SCRAPING_USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
