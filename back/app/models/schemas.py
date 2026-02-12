@@ -96,12 +96,30 @@ class RentPredictionRequest(BaseModel):
     features: RentPredictionFeatures
 
 
+class SimilarProperty(BaseModel):
+    """Similar property from KNN search"""
+    region: str
+    city: str
+    property_type: str
+    surface: float
+    rooms: int
+    bathrooms: int
+    price: float
+    similarity_score: float
+    has_piscine: bool = False
+    has_garage: bool = False
+    has_jardin: bool = False
+    has_terrasse: bool = False
+    has_ascenseur: bool = False
+
+
 class RentPredictionResponse(BaseModel):
     """Response from rent model prediction"""
 
     predicted_price: float
     currency: str = "TND"
     model: str
+    similar_properties: List[SimilarProperty] = []
 
 
 class SalePredictionFeatures(BaseModel):
@@ -139,6 +157,7 @@ class SalePredictionResponse(BaseModel):
     predicted_price: float
     currency: str = "TND"
     model: str
+    similar_properties: List[SimilarProperty] = []
 
 
 class Property(BaseModel):

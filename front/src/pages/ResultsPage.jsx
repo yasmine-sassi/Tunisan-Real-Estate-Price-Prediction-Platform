@@ -195,6 +195,101 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {/* Similar Properties from KNN */}
+      {prediction.similar_properties && prediction.similar_properties.length > 0 && (
+        <div className="card">
+          <h3 className="text-2xl font-bold mb-4 flex items-center">
+            <Home className="w-6 h-6 mr-2 text-blue-600" />
+            Similar Properties in Our Dataset
+          </h3>
+          <p className="text-gray-600 mb-6 text-sm">
+            Here are the 5 most similar properties from our training data, based on size, rooms, and bathrooms.
+          </p>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {prediction.similar_properties.map((property, index) => (
+              <div
+                key={index}
+                className="border-2 border-gray-200 rounded-lg p-4 hover:border-blue-400 transition-colors bg-white"
+              >
+                {/* Similarity Badge */}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+                    {(property.similarity_score * 100).toFixed(0)}% Match
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-blue-600">
+                      {formatPrice(property.price)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location */}
+                <div className="flex items-start mb-2">
+                  <MapPin className="w-4 h-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <div className="font-medium">{property.region}</div>
+                    <div className="text-gray-600 text-xs">{property.city}</div>
+                  </div>
+                </div>
+
+                {/* Property Type */}
+                <div className="flex items-center mb-2">
+                  <Building2 className="w-4 h-4 mr-2 text-gray-400" />
+                  <span className="text-sm capitalize">{property.property_type}</span>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-200 text-xs">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-1">
+                      <Maximize2 className="w-3 h-3 text-gray-500" />
+                    </div>
+                    <div className="font-semibold">{property.surface} m²</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-1">
+                      <BedDouble className="w-3 h-3 text-gray-500" />
+                    </div>
+                    <div className="font-semibold">{property.rooms} rooms</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-1">
+                      <Bath className="w-3 h-3 text-gray-500" />
+                    </div>
+                    <div className="font-semibold">{property.bathrooms} bath</div>
+                  </div>
+                </div>
+
+                {/* Amenities */}
+                {(property.has_piscine || property.has_garage || property.has_jardin || 
+                  property.has_terrasse || property.has_ascenseur) && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex flex-wrap gap-1">
+                      {property.has_piscine && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">🏊 Pool</span>
+                      )}
+                      {property.has_garage && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">🚗 Garage</span>
+                      )}
+                      {property.has_jardin && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">🌳 Garden</span>
+                      )}
+                      {property.has_terrasse && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">🏡 Terrace</span>
+                      )}
+                      {property.has_ascenseur && (
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">🛗 Elevator</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex flex-col sm:flex-row justify-center gap-4">
         <Link 
