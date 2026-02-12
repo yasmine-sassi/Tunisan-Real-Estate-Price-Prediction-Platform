@@ -104,6 +104,43 @@ class RentPredictionResponse(BaseModel):
     model: str
 
 
+class SalePredictionFeatures(BaseModel):
+    """Features expected by the train6 sale model pipeline"""
+
+    region: str = Field(..., description="Region name")
+    city: str = Field(..., description="City name")
+    property_type: str = Field(..., description="Property type")
+    price_segment: Optional[str] = Field("mid", description="Price segment label")
+
+    surface: float = Field(..., gt=0, description="Surface area (m²)")
+    rooms: Optional[int] = Field(0, ge=0)
+    bathrooms: Optional[int] = Field(0, ge=0)
+    property_type_cluster: Optional[int] = Field(0, ge=0, description="Cluster id")
+
+    has_piscine: Optional[bool] = False
+    has_garage: Optional[bool] = False
+    has_jardin: Optional[bool] = False
+    has_terrasse: Optional[bool] = False
+    has_ascenseur: Optional[bool] = False
+    is_meuble: Optional[bool] = False
+    has_chauffage: Optional[bool] = False
+    has_climatisation: Optional[bool] = False
+
+
+class SalePredictionRequest(BaseModel):
+    """Request for sale model prediction"""
+
+    features: SalePredictionFeatures
+
+
+class SalePredictionResponse(BaseModel):
+    """Response from sale model prediction"""
+
+    predicted_price: float
+    currency: str = "TND"
+    model: str
+
+
 class Property(BaseModel):
     """Property listing from scraper"""
     id: Optional[str] = None

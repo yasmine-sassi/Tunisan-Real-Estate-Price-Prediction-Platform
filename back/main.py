@@ -6,9 +6,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.api import recommendations, rent_prediction
+from app.api import recommendations, rent_prediction, sale_prediction
 from app.core.config import settings
 from app.ml.rent_model_service import rent_model_service
+from app.ml.sale_model_service import sale_model_service
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -22,6 +23,13 @@ async def lifespan(app: FastAPI):
         print("✅ Train5 rent model loaded successfully!")
     except Exception as e:
         print(f"⚠️ Warning: Could not load train5 rent model: {e}")
+
+    # Load train6 sale model
+    try:
+        sale_model_service.load()
+        print("✅ Train6 sale model loaded successfully!")
+    except Exception as e:
+        print(f"⚠️ Warning: Could not load train6 sale model: {e}")
     
     
     yield
@@ -49,6 +57,7 @@ app.add_middleware(
 # Include routers
 app.include_router(recommendations.router, prefix="/api/v1/recommendations", tags=["Recommendations"])
 app.include_router(rent_prediction.router, prefix="/api/v1/rent", tags=["Rent Model (train5)"])
+app.include_router(sale_prediction.router, prefix="/api/v1/sale", tags=["Sale Model (train6)"])
 
 
 @app.get("/")
@@ -67,6 +76,7 @@ async def health_check():
     return {
         "status": "healthy",
         "rent_model_loaded": rent_model_service.loaded,
+        "sale_model_loaded": sale_model_service.loaded,
         "api_version": "1.0.0"
     }
 
