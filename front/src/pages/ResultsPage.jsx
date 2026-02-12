@@ -203,7 +203,7 @@ export default function ResultsPage() {
             Similar Properties in Our Dataset
           </h3>
           <p className="text-gray-600 mb-6 text-sm">
-            Here are the 5 most similar properties from our training data, based on size, rooms, and bathrooms.
+            Here are the 5 most similar properties from our training data.
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

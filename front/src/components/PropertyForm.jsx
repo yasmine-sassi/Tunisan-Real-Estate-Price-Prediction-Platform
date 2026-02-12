@@ -8,7 +8,7 @@ const regionOptions = Object.keys(priceSegmentByRegion).sort((a, b) =>
 )
 
 const propertyTypes = [
-  'apartment', 'house', 'villa', 'studio', 'duplex', 'land', 'commercial'
+  'Appartement', 'Maison', 'Villa', 'Studio'
 ]
 
 const computePriceSegment = (region) => {
