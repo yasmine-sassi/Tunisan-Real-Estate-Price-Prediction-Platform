@@ -16,33 +16,49 @@ export default function PredictionPage() {
     setError(null)
 
     try {
-      const propertyPayload = {
-        ...propertyData,
-        governorate: propertyData.region,
-        area: propertyData.surface,
-        has_elevator: propertyData.has_ascenseur,
-        has_parking: propertyData.has_garage,
-        has_garden: propertyData.has_jardin,
-        has_pool: propertyData.has_piscine,
-        is_furnished: propertyData.is_meuble,
+      // Prepare features for rent or sale model
+      const features = {
+        region: propertyData.region,
+        city: propertyData.city || propertyData.region, // Fallback to region if city is empty
+        property_type: propertyData.property_type,
+        price_segment: propertyData.price_segment || 'Medium',
+        surface: parseFloat(propertyData.surface),
+        rooms: parseInt(propertyData.rooms) || 0,
+        bathrooms: parseInt(propertyData.bathrooms) || 0,
+        has_piscine: propertyData.has_piscine || false,
+        has_garage: propertyData.has_garage || false,
+        has_jardin: propertyData.has_jardin || false,
+        has_terrasse: propertyData.has_terrasse || false,
+        has_ascenseur: propertyData.has_ascenseur || false,
+        is_meuble: propertyData.is_meuble || false,
+        has_chauffage: propertyData.has_chauffage || false,
+        has_climatisation: propertyData.has_climatisation || false,
+      }
+
+      // Add property_type_cluster for sale model
+      if (transactionType === 'sale') {
+        features.property_type_cluster = 0 // Default cluster
       }
 
       const requestData = {
-        user_role: userRole,
-        property_features: {
-          ...propertyPayload,
-          transaction_type: transactionType,
-        },
+        features,
       }
 
-      const response = await api.predictPrice(requestData)
+      // Call the appropriate endpoint based on transaction type
+      let response
+      if (transactionType === 'rent') {
+        response = await api.predictRent(requestData)
+      } else {
+        response = await api.predictSale(requestData)
+      }
       
       // Navigate to results page with data
       navigate('/results', {
         state: {
           prediction: response.data,
-          propertyData: requestData.property_features,
+          propertyData: features,
           userRole,
+          transactionType,
         },
       })
     } catch (err) {
