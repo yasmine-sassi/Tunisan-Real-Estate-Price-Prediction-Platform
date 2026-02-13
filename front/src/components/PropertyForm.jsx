@@ -99,7 +99,7 @@ export default function PropertyForm({ onSubmit, isLoading, userRole }) {
           <select
             {...register('property_type', { required: 'Property type is required' })}
             className="input"
-          >
+          >        
             <option value="">Select type</option>
             {propertyTypes.map((type) => (
               <option key={type} value={type}>
